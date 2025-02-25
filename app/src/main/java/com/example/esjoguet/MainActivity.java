@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -42,6 +43,20 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
             finish();
         });
 
+        findViewById(R.id.button_leaderboard).setOnClickListener((View v) -> {
+            Intent intent = new Intent(MainActivity.this, Activity_LeaderBoard.class);
+            startActivity(intent);
+            finish();
+        });
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
+        });
     }
 
     public void startStuff(Bundle savedInstanceState) {

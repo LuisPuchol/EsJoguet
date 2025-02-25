@@ -25,6 +25,7 @@
     <EditText
         android:id="@+id/etUsername"
         style="@style/EditTextHint"
+        android:text="paco"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -43,6 +44,7 @@
     <EditText
         android:id="@+id/etPassword"
         style="@style/EditTextHint"
+        android:text="1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"

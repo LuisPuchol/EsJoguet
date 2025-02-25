@@ -1,20 +1,19 @@
 package com.example.esjoguet;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 
-import com.google.android.material.snackbar.Snackbar;
-
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
 import android.util.Log;
 import android.view.GestureDetector;
-import android.view.Gravity;
 import android.view.MotionEvent;
-import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -23,12 +22,6 @@ import android.widget.Toast;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.example.esjoguet.databinding.ActivityStackerGameBinding;
 
 public class Activity_StackerGame extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
@@ -53,6 +46,10 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
             25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300
     };
 
+    private TextView tvTriesCounter, tvSmallPriceCounter, tvBigPriceCounter;
+    private int tries, smallPrizes, bigPrizes;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: Activity has been created");
@@ -60,6 +57,19 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         startStuff(savedInstanceState);
         initializeGestureDetector();
         setUpBoard();
+
+        tvTriesCounter = findViewById(R.id.triesCounter);
+        tvSmallPriceCounter = findViewById(R.id.smallPriceCounter);
+        tvBigPriceCounter = findViewById(R.id.bigPriceCounter);
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent(Activity_StackerGame.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
+        });
     }
     private void initializeGestureDetector() {
         gestureDetector = new GestureDetector(this, this);
@@ -155,7 +165,8 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         int supportedCount = countSupportedBlocks(supported);
 
         if (supportedCount == 0) {
-            endGame();
+            gameOver();
+            handleEndGame();
             return;
         }
 
@@ -210,6 +221,7 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
 
         if (currentRow < 0) {
             handleWin();
+            handleEndGame();
             return;
         }
 
@@ -340,10 +352,38 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
-    private void endGame() {
+    private void gameOver() {
         Toast.makeText(this, "Game Over", Toast.LENGTH_SHORT).show();
     }
 
+
+    private void handleEndGame() {
+        tries++;
+        if (currentRow <= 4) smallPrizes++;
+        if (currentRow == 0) bigPrizes++;
+
+        //Mover en un futuro para que no se actualicen al final
+        tvTriesCounter.setText(String.valueOf(tries));
+        tvSmallPriceCounter.setText(String.valueOf(smallPrizes));
+        tvBigPriceCounter.setText(String.valueOf(bigPrizes));
+
+        DBAssistant dbAssistant = new DBAssistant(this);
+        String username = getUsername(); // Obtener el usuario actual
+        int userId = dbAssistant.getUserId(username); // Obtener user_id desde la BBDD
+
+        // Obtener los valores de los TextViews
+        tries = Integer.parseInt(tvTriesCounter.getText().toString());
+        smallPrizes = Integer.parseInt(tvSmallPriceCounter.getText().toString());
+        bigPrizes = Integer.parseInt(tvBigPriceCounter.getText().toString());
+
+        // Guardar en la base de datos
+        dbAssistant.insertGameStackerRecord(userId, tries, smallPrizes, bigPrizes);
+    }
+
+    private String getUsername() {
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        return prefs.getString("username", "Guest");
+    }
 
     public void startStuff(Bundle savedInstanceState) {
         EdgeToEdge.enable(this);

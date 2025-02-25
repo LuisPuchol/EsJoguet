@@ -2,6 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="lighter_gray">#FFEEEEEE</color>
 
 
     <color name="tile_2">#EEE4DA</color>

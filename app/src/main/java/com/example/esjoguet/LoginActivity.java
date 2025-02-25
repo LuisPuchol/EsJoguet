@@ -1,6 +1,7 @@
 package com.example.esjoguet;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -13,6 +14,8 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.core.graphics.Insets;
 import androidx.core.splashscreen.SplashScreen;
@@ -26,33 +29,77 @@ import androidx.navigation.ui.NavigationUI;
 import com.example.esjoguet.databinding.ActivityLoginBinding;
 
 public class LoginActivity extends AppCompatActivity implements GestureDetector.OnGestureListener{
-
-
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "Login Activity";
     private GestureDetector gestureDetector;
     private float startX, startY, endX, endY;
     private Button btnLogin;
+    private DBAssistant dbAssistant;
+    private EditText etUsername, etPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate: Activity has been created");
-
         super.onCreate(savedInstanceState);
-
-        startStuff(savedInstanceState);
-
-        gestureDetector = new GestureDetector(this,this);
-
-        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         setContentView(R.layout.activity_login);
+        startStuff(savedInstanceState);
+        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener());
 
-        // Ejemplo: Botón de iniciar sesión
-        findViewById(R.id.btnLogin).setOnClickListener((View v) -> {
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish(); // Finaliza LoginActivity
-        });
+        initializeUI();
+        dbAssistant = new DBAssistant(this);
+        setupListeners();
+    }
 
+    private void initializeUI() {
+        etUsername = findViewById(R.id.etUsername);
+        etPassword = findViewById(R.id.etPassword);
+        btnLogin = findViewById(R.id.btnLogin);
+    }
+
+    private void setupListeners() {
+        btnLogin.setOnClickListener((View v) -> handleLogin());
+    }
+
+    private void handleLogin() {
+        String username = etUsername.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            showToast("Por favor, completa todos los campos");
+            return;
+        }
+
+        String storedPassword = dbAssistant.getPasswordForUser(username);
+
+        if (storedPassword == null) {
+            dbAssistant.insertUser(username, password);
+            saveUsername(username); // Guardamos el usuario en SharedPreferences
+            showToast("Usuario creado con éxito");
+            goToMainActivity();
+        } else if (storedPassword.equals(password)) {
+            saveUsername(username); // Guardamos el usuario en SharedPreferences
+            showToast("Inicio de sesión exitoso");
+            goToMainActivity();
+        } else {
+            showToast("Contraseña incorrecta");
+        }
+    }
+
+    // Guardar el nombre de usuario en SharedPreferences
+    private void saveUsername(String username) {
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("username", username);
+        editor.apply();
+    }
+
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void goToMainActivity() {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     public void startStuff(Bundle savedInstanceState) {

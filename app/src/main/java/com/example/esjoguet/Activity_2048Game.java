@@ -1,14 +1,18 @@
 package com.example.esjoguet;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Looper;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.core.graphics.Insets;
@@ -20,7 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+
 import android.os.Handler;
+import android.widget.Toast;
 
 public class Activity_2048Game extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
@@ -52,6 +58,11 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
     private Random random = new Random();
     private Boolean hasGameStarted = false;
 
+    private Integer[][] previousBoard;
+    private int previousScore;
+    private int previousMoves;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: Activity has been created");
@@ -62,6 +73,18 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
         startGameLayout();
         initializeTileColors();
         startGame();
+
+        Button backButton = findViewById(R.id.BackBttn);
+        backButton.setOnClickListener(v -> undoLastMove());
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent(Activity_2048Game.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
+        });
     }
 
     private void startGame() {
@@ -176,13 +199,57 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
 
     private void updateTileUI(Integer row, Integer col, Integer value) {
         TextView tile = tiles[row][col];
-        if (value > 0) {
-            tile.setText(String.valueOf(value));
-        } else {
+
+        if (value == null || value <= 0) {
             tile.setText("");
+        } else {
+            tile.setText(String.valueOf(value));
         }
-        Integer colorResource = tileColors.getOrDefault(value, R.color.tile_default);
+
+        Integer colorResource = tileColors.getOrDefault(value != null ? value : 0, R.color.tile_default);
         tile.setBackgroundResource(colorResource);
+    }
+
+    /**
+     * Saves the current state of the board, for a possible future rollback.
+     */
+    private void savePreviousState() {
+        previousBoard = new Integer[GRID_SIZE][GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            previousBoard[i] = board[i].clone(); // Copia superficial de la fila
+        }
+
+        previousScore = scoreCounter;
+        previousMoves = movesCounter;
+    }
+
+    /**
+     * Restores the previous state of the board and scores.
+     */
+    private void undoLastMove() {
+        if (previousBoard != null) {
+            for (int i = 0; i < GRID_SIZE; i++) {
+                board[i] = previousBoard[i].clone();
+            }
+            scoreCounter = previousScore;
+            movesCounter = previousMoves;
+
+            updateBoardUI();
+            tvScoreCounter.setText(String.valueOf(scoreCounter));
+            tvMovesCounter.setText(String.valueOf(movesCounter));
+        }
+    }
+
+    /**
+     * Using updateTileUI searches and updates all the board tiles.
+     */
+    private void updateBoardUI() {
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                Integer value = board[row][col];
+                updateTileUI(row, col, (value != null) ? value : 0);
+            }
+        }
     }
 
     /**
@@ -195,6 +262,7 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
      *                  - 3: Down
      */
     private void moveTiles(int direction) {
+        savePreviousState();
         updateMovesCounter();
 
         if (!hasGameStarted) {
@@ -213,8 +281,68 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
         }
 
         spawnRandomTile();
+        // Verificar si el juego ha terminado
+        if (isGameOver()) {
+            handleGameOver();
+        }
     }
 
+    /**
+     * Determines if the game is over by checking if there are no empty tiles
+     * and no possible moves where adjacent tiles can merge.
+     *
+     * @return true if no moves are possible, false otherwise.
+     */
+    private boolean isGameOver() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (board[i][j] == null) {
+                    return false;
+                }
+            }
+        }
+
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                int current = board[i][j];
+                if (j < GRID_SIZE - 1 && board[i][j + 1].equals(current)) {
+                    return false;
+                }
+                if (i < GRID_SIZE - 1 && board[i + 1][j].equals(current)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void handleGameOver() {
+        Toast.makeText(this, "¡Game Over! No hay más movimientos.", Toast.LENGTH_LONG).show();
+
+        hasGameStarted = false;
+        stopTimer();
+
+        DBAssistant dbAssistant = new DBAssistant(this);
+        String username = getUsername(); // Obtener el usuario actual
+        int userId = dbAssistant.getUserId(username); // Obtener el user_id desde la BBDD
+
+        if (userId == -1) {
+            Toast.makeText(this, "Error: Usuario no encontrado", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String time = tvTimeCounter.getText().toString();
+        int moves = Integer.parseInt(tvMovesCounter.getText().toString());
+        int score = Integer.parseInt(tvScoreCounter.getText().toString());
+
+        dbAssistant.insertGame2048Record(userId, moves, time, score);
+    }
+
+    private String getUsername() {
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        return prefs.getString("username", "Guest");
+    }
 
     private void moveDown() {
         for (int i = GRID_SIZE - 1; i >= 0; i--) {
@@ -260,12 +388,12 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
     /**
      * Checks if a tile can move or merge with an adjacent tile.
      *
-     * @param i                   Current row position.
-     * @param j                   Current column position.
-     * @param moveRow             Row movement (-1 for up, 1 for down, 0 for none).
-     * @param moveColumn          Column movement (-1 for left, 1 for right, 0 for none).
-     * @param breakConditionRow   Row boundary condition for stopping.
-     * @param breakConditionCol   Column boundary condition for stopping.
+     * @param i                 Current row position.
+     * @param j                 Current column position.
+     * @param moveRow           Row movement (-1 for up, 1 for down, 0 for none).
+     * @param moveColumn        Column movement (-1 for left, 1 for right, 0 for none).
+     * @param breakConditionRow Row boundary condition for stopping.
+     * @param breakConditionCol Column boundary condition for stopping.
      */
     private void checkMoveAndAddNearbyTile(int i, int j, int moveRow, int moveColumn, int breakConditionRow, int breakConditionCol) {
         int newRow = i + moveRow;
@@ -296,7 +424,6 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
         }
     }
 
-
     private void updateMovesCounter() {
         movesCounter++;
         tvMovesCounter.setText(movesCounter.toString());
@@ -312,17 +439,6 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
         updateTileUI(row, col, 0);
         board[newRow][newCol] = value;
         board[row][col] = null;
-    }
-
-
-    public void startStuff(Bundle savedInstanceState) {
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity2048_game);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
     }
 
     /**
@@ -351,7 +467,15 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
         return true;
     }
 
-
+    public void startStuff(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity2048_game);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+    }
 
     @Override
     public boolean onDown(MotionEvent e) {
