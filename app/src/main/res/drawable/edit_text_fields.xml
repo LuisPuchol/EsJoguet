@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <shape xmlns:android="http://schemas.android.com/apk/res/android">
+        <solid android:color="#F0FFFFFF" /> <!-- Fondo blanco con opacidad -->
+        <corners android:radius="8dp" /> <!-- Bordes redondeados -->
+        <stroke android:color="#D3D3D3" android:width="1dp" /> <!-- Línea gris claro -->
+    </shape>
+</selector>
