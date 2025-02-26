@@ -71,16 +71,25 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
             }
         });
     }
+
     private void initializeGestureDetector() {
         gestureDetector = new GestureDetector(this, this);
     }
 
+    /**
+     * Configura el tablero de juego.
+     */
     private void setUpBoard() {
         GridLayout gridLayout = initializeGridLayout();
         gridCells = new ImageView[FILAS][COLUMNAS];
         createCellGrid(gridLayout);
     }
 
+    /**
+     * Inicializa el GridLayout que contendrá el tablero del juego.
+     *
+     * @return GridLayout inicializado con filas y columnas configuradas
+     */
     private GridLayout initializeGridLayout() {
         GridLayout gridLayout = findViewById(R.id.gridLayoutStacker);
         gridLayout.setColumnCount(COLUMNAS);
@@ -88,6 +97,11 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         return gridLayout;
     }
 
+    /**
+     * Crea la cuadrícula de celdas para el tablero del juego.
+     *
+     * @param gridLayout El layout donde se añadirán las celdas
+     */
     private void createCellGrid(GridLayout gridLayout) {
         for (int fila = 0; fila < FILAS; fila++) {
             for (int col = 0; col < COLUMNAS; col++) {
@@ -98,6 +112,13 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
+    /**
+     * Crea una celda individual para el tablero.
+     *
+     * @param fila Posición de fila para la celda
+     * @param col  Posición de columna para la celda
+     * @return ImageView configurado como celda
+     */
     private ImageView createCell(int fila, int col) {
         ImageView imageView = new ImageView(this);
         imageView.setBackgroundColor(Color.LTGRAY);
@@ -105,6 +126,13 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         return imageView;
     }
 
+    /**
+     * Crea los parámetros de layout para una celda.
+     *
+     * @param fila Posición de fila para los parámetros
+     * @param col  Posición de columna para los parámetros
+     * @return Parámetros de layout configurados
+     */
     private GridLayout.LayoutParams createCellLayoutParams(int fila, int col) {
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
         params.rowSpec = GridLayout.spec(fila, 1f);
@@ -115,41 +143,39 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         return params;
     }
 
+    /**
+     * Inicia el juego, inicializando las variables y el tablero.
+     */
     private void startGame() {
-        // Reinicializar variables
         currentRow = 11;
         currentColumn = 0;
-        BLOCK_SIZE = INITIAL_BLOCK_SIZE;  // Usamos la constante en lugar del valor directo
+        BLOCK_SIZE = INITIAL_BLOCK_SIZE;
         direction = 1;
-        currentDelay = FLOOR_DELAYS[11];  // Establecemos el delay inicial
+        currentDelay = FLOOR_DELAYS[11];
 
-        // Limpiar el tablero entero (por si es un reinicio)
         for (int fila = 0; fila < FILAS; fila++) {
             for (int col = 0; col < COLUMNAS; col++) {
                 gridCells[fila][col].setBackgroundColor(Color.LTGRAY);
             }
         }
 
-        // Iniciar el juego con los bloques moviéndose
         startMovingBlocks();
     }
 
-
-
+    /**
+     * Inicia el movimiento de los bloques en la fila actual.
+     */
     private void startMovingBlocks() {
-        // Limpiar la fila actual
         for (int col = 0; col < COLUMNAS; col++) {
             gridCells[currentRow][col].setBackgroundColor(Color.LTGRAY);
         }
 
-        // Pintar el bloque inicial con el tamaño actual
         for (int i = 0; i < BLOCK_SIZE; i++) {
             if (currentColumn + i < COLUMNAS) {
                 gridCells[currentRow][currentColumn + i].setBackgroundColor(Color.BLUE);
             }
         }
 
-        // Iniciar la animación
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -159,6 +185,9 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }, DELAY);
     }
 
+    /**
+     * Fija los bloques en su posición actual y verifica la continuidad del juego.
+     */
     private void fixBlocks() {
         stopCurrentMovement();
         boolean[] supported = checkBlockSupport();
@@ -173,10 +202,18 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         updateGameState(supported, supportedCount);
     }
 
+    /**
+     * Detiene el movimiento actual de los bloques.
+     */
     private void stopCurrentMovement() {
         handler.removeCallbacksAndMessages(null);
     }
 
+    /**
+     * Verifica qué bloques tienen soporte debajo.
+     *
+     * @return Array de booleanos indicando qué bloques tienen soporte
+     */
     private boolean[] checkBlockSupport() {
         boolean[] supported = new boolean[COLUMNAS];
 
@@ -189,16 +226,28 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         return supported;
     }
 
+    /**
+     * Determina si una posición contiene un bloque activo.
+     *
+     * @param col Columna a verificar
+     * @return true si hay un bloque activo, false en caso contrario
+     */
     private boolean isActiveBlock(int col) {
-        return ((ColorDrawable)gridCells[currentRow][col].getBackground()).getColor() == Color.BLUE;
+        return ((ColorDrawable) gridCells[currentRow][col].getBackground()).getColor() == Color.BLUE;
     }
 
+    /**
+     * Verifica si un bloque tiene soporte debajo.
+     *
+     * @param col Columna del bloque a verificar
+     * @return true si el bloque tiene soporte, false en caso contrario
+     */
     private boolean hasSupport(int col) {
         if (currentRow == FILAS - 1) {
             return true;
         }
 
-        if (((ColorDrawable)gridCells[currentRow + 1][col].getBackground()).getColor() == Color.BLUE) {
+        if (((ColorDrawable) gridCells[currentRow + 1][col].getBackground()).getColor() == Color.BLUE) {
             return true;
         } else {
             gridCells[currentRow][col].setBackgroundColor(Color.LTGRAY);
@@ -206,6 +255,12 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
+    /**
+     * Cuenta la cantidad de bloques que tienen soporte.
+     *
+     * @param supported Array con el estado de soporte de cada bloque
+     * @return Cantidad de bloques con soporte
+     */
     private int countSupportedBlocks(boolean[] supported) {
         int count = 0;
         for (boolean isSupported : supported) {
@@ -214,6 +269,12 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         return count;
     }
 
+    /**
+     * Actualiza el estado del juego después de fijar bloques.
+     *
+     * @param supported      Array con el estado de soporte de cada bloque
+     * @param supportedCount Cantidad de bloques con soporte
+     */
     private void updateGameState(boolean[] supported, int supportedCount) {
         updateBlockSize(supportedCount);
         int newColumn = findFirstSupportedColumn(supported);
@@ -229,20 +290,33 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         startMovingBlocksForNextRow();
     }
 
+    /**
+     * Actualiza el tamaño del bloque según la cantidad de bloques soportados.
+     *
+     * @param supportedCount Cantidad de bloques con soporte
+     */
     private void updateBlockSize(int supportedCount) {
         BLOCK_SIZE = supportedCount;
         adjustBlockSizeForLevel();
     }
 
+    /**
+     * Ajusta el tamaño del bloque según el nivel actual.
+     */
     private void adjustBlockSizeForLevel() {
         if (currentRow == 7) {
             BLOCK_SIZE = Math.min(BLOCK_SIZE, 2);
-        }
-        else if (currentRow == 4) {
+        } else if (currentRow == 4) {
             BLOCK_SIZE = Math.min(BLOCK_SIZE, 1);
         }
     }
 
+    /**
+     * Encuentra la primera columna con un bloque soportado.
+     *
+     * @param supported Array con el estado de soporte de cada bloque
+     * @return Índice de la primera columna con soporte
+     */
     private int findFirstSupportedColumn(boolean[] supported) {
         for (int col = 0; col < COLUMNAS; col++) {
             if (supported[col]) return col;
@@ -250,14 +324,25 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         return 0;
     }
 
+    /**
+     * Mueve el juego a la siguiente fila (hacia arriba).
+     */
     private void moveToNextRow() {
         currentRow--;
     }
 
+    /**
+     * Maneja el evento de victoria del juego.
+     */
     private void handleWin() {
         Toast.makeText(this, "¡Ganaste!", Toast.LENGTH_LONG).show();
     }
 
+    /**
+     * Actualiza la velocidad y posición para la siguiente fila.
+     *
+     * @param newColumn Nueva posición de columna para el bloque
+     */
     private void updateSpeedAndPosition(int newColumn) {
         if (currentRow >= 0) {
             currentDelay = FLOOR_DELAYS[currentRow];
@@ -267,6 +352,9 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
+    /**
+     * Inicia el movimiento de bloques para la siguiente fila.
+     */
     private void startMovingBlocksForNextRow() {
         clearCurrentRow();
         paintInitialBlocks();
@@ -274,12 +362,18 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         startBlockMovement();
     }
 
+    /**
+     * Limpia la fila actual para preparar el nuevo movimiento.
+     */
     private void clearCurrentRow() {
         for (int col = 0; col < COLUMNAS; col++) {
             gridCells[currentRow][col].setBackgroundColor(Color.LTGRAY);
         }
     }
 
+    /**
+     * Pinta los bloques iniciales en su posición.
+     */
     private void paintInitialBlocks() {
         for (int i = 0; i < BLOCK_SIZE; i++) {
             int col = currentColumn + i;
@@ -289,10 +383,19 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
+    /**
+     * Verifica si una columna está dentro de los límites válidos.
+     *
+     * @param col Índice de columna a verificar
+     * @return true si la columna es válida, false en caso contrario
+     */
     private boolean isValidColumn(int col) {
         return col >= 0 && col < COLUMNAS;
     }
 
+    /**
+     * Establece la dirección inicial del movimiento de los bloques.
+     */
     private void setInitialDirection() {
         if (currentColumn + BLOCK_SIZE >= COLUMNAS) {
             direction = -1;
@@ -303,6 +406,9 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
+    /**
+     * Inicia el movimiento de los bloques con el delay actual.
+     */
     private void startBlockMovement() {
         handler.postDelayed(new Runnable() {
             @Override
@@ -313,7 +419,9 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }, currentDelay);
     }
 
-    // Mejorar moveBlocks para manejar correctamente los límites
+    /**
+     * Mueve los bloques horizontalmente según la dirección actual.
+     */
     private void moveBlocks() {
         clearCurrentRow();
         updateDirection();
@@ -321,6 +429,9 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         drawBlocks();
     }
 
+    /**
+     * Actualiza la dirección del movimiento si se alcanza un límite.
+     */
     private void updateDirection() {
         if (direction > 0 && (currentColumn + BLOCK_SIZE >= COLUMNAS)) {
             direction = -1;
@@ -331,11 +442,17 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
+    /**
+     * Actualiza la posición de los bloques según la dirección.
+     */
     private void updatePosition() {
         currentColumn += direction;
         enforcePositionBounds();
     }
 
+    /**
+     * Asegura que la posición de los bloques se mantenga dentro de los límites.
+     */
     private void enforcePositionBounds() {
         if (currentColumn < 0) currentColumn = 0;
         if (currentColumn + BLOCK_SIZE > COLUMNAS) {
@@ -343,6 +460,9 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
+    /**
+     * Dibuja los bloques en la posición actual.
+     */
     private void drawBlocks() {
         for (int i = 0; i < BLOCK_SIZE; i++) {
             int col = currentColumn + i;
@@ -352,39 +472,51 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         }
     }
 
+    /**
+     * Maneja el evento de fin de juego por derrota.
+     */
     private void gameOver() {
         Toast.makeText(this, "Game Over", Toast.LENGTH_SHORT).show();
     }
 
-
+    /**
+     * Procesa el final del juego, actualizando estadísticas y base de datos.
+     */
     private void handleEndGame() {
         tries++;
         if (currentRow <= 4) smallPrizes++;
         if (currentRow == 0) bigPrizes++;
 
-        //Mover en un futuro para que no se actualicen al final
         tvTriesCounter.setText(String.valueOf(tries));
         tvSmallPriceCounter.setText(String.valueOf(smallPrizes));
         tvBigPriceCounter.setText(String.valueOf(bigPrizes));
 
         DBAssistant dbAssistant = new DBAssistant(this);
-        String username = getUsername(); // Obtener el usuario actual
-        int userId = dbAssistant.getUserId(username); // Obtener user_id desde la BBDD
+        String username = getUsername();
+        int userId = dbAssistant.getUserId(username);
 
-        // Obtener los valores de los TextViews
         tries = Integer.parseInt(tvTriesCounter.getText().toString());
         smallPrizes = Integer.parseInt(tvSmallPriceCounter.getText().toString());
         bigPrizes = Integer.parseInt(tvBigPriceCounter.getText().toString());
 
-        // Guardar en la base de datos
         dbAssistant.insertGameStackerRecord(userId, tries, smallPrizes, bigPrizes);
     }
 
+    /**
+     * Obtiene el nombre de usuario almacenado en preferencias.
+     *
+     * @return Nombre de usuario o "Guest" si no está definido
+     */
     private String getUsername() {
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         return prefs.getString("username", "Guest");
     }
 
+    /**
+     * Inicializa la actividad con configuraciones de interfaz.
+     *
+     * @param savedInstanceState Estado guardado de la actividad
+     */
     public void startStuff(Bundle savedInstanceState) {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_stacker_game);
@@ -395,10 +527,11 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         });
     }
 
+    /**
+     * Maneja el gesto de deslizamiento rápido en la pantalla.
+     */
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        //parte de abajo de la pantalla mayor valor Y
-        //parte derecha de la pantalla mayor valor X
         Log.d(TAG, "onFling: Fling gesture detected with velocityX = " + velocityX + " and velocityY = " + velocityY);
 
         float movementX = startX - endX;
@@ -417,6 +550,10 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         return true;
     }
 
+    /**
+     * Maneja el evento de toque en la pantalla.
+     * Inicia el juego al primer toque y fija los bloques en los toques subsiguientes.
+     */
     @Override
     public boolean onDown(MotionEvent e) {
         startX = e.getX();
