@@ -52,7 +52,7 @@ public class LeaderBoardStacker extends AppCompatActivity {
 
     private void startStuff(Bundle savedInstanceState) {
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_leader_board_stacker); // Usar el layout que creamos
+        setContentView(R.layout.activity_leader_board_stacker);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -61,7 +61,7 @@ public class LeaderBoardStacker extends AppCompatActivity {
     }
 
     private void initComponents() {
-        recyclerLeaderboardStacker = findViewById(R.id.rvRecords);
+        recyclerLeaderboardStacker = findViewById(R.id.recyclerLeaderboard2048);
         leaderboardEntries = new ArrayList<>();
         dbAssistant = new DBAssistant(this);
     }

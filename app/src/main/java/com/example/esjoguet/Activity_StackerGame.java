@@ -2,6 +2,7 @@ package com.example.esjoguet;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -46,21 +47,25 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
             25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300
     };
 
-    private TextView tvTriesCounter, tvSmallPriceCounter, tvBigPriceCounter;
-    private int tries, smallPrizes, bigPrizes;
+    private TextView tvTriesCounter, tvSmallPriceCounter, tvBigPriceCounter, tvUserName;
+    private int tries = 0, smallPrizes, bigPrizes;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: Activity has been created");
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         startStuff(savedInstanceState);
         initializeGestureDetector();
+
         setUpBoard();
 
-        tvTriesCounter = findViewById(R.id.triesCounter);
-        tvSmallPriceCounter = findViewById(R.id.smallPriceCounter);
-        tvBigPriceCounter = findViewById(R.id.bigPriceCounter);
+        setTextViews();
+
+        setDataBaseStats();
+
+        updateStats();
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -70,6 +75,21 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
                 startActivity(intent);
             }
         });
+    }
+
+    private void setDataBaseStats() {
+        DBAssistant db = new DBAssistant(this);
+        tries = db.getUserTries(getUsername());
+        smallPrizes = db.getUserSmallPrizes(getUsername());
+        bigPrizes = db.getUserBigPrizes(getUsername());
+        tvUserName.setText(getUsername());
+    }
+
+    private void setTextViews() {
+        tvTriesCounter = findViewById(R.id.triesCounter);
+        tvSmallPriceCounter = findViewById(R.id.smallPriceCounter);
+        tvBigPriceCounter = findViewById(R.id.bigPriceCounter);
+        tvUserName = findViewById(R.id.userTextView);
     }
 
     private void initializeGestureDetector() {
@@ -485,13 +505,12 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
     private void handleEndGame() {
         tries++;
         if (currentRow <= 4) smallPrizes++;
-        if (currentRow == 0) bigPrizes++;
+        if (currentRow == -1) bigPrizes++;
 
-        tvTriesCounter.setText(String.valueOf(tries));
-        tvSmallPriceCounter.setText(String.valueOf(smallPrizes));
-        tvBigPriceCounter.setText(String.valueOf(bigPrizes));
+        updateStats();
 
         DBAssistant dbAssistant = new DBAssistant(this);
+
         String username = getUsername();
         int userId = dbAssistant.getUserId(username);
 
@@ -500,6 +519,35 @@ public class Activity_StackerGame extends AppCompatActivity implements GestureDe
         bigPrizes = Integer.parseInt(tvBigPriceCounter.getText().toString());
 
         dbAssistant.insertGameStackerRecord(userId, tries, smallPrizes, bigPrizes);
+
+        resetGame();
+
+    }
+
+    /**
+     * Resetea el juego al estado inicial sin necesidad de cerrar la actividad.
+     */
+    private void resetGame() {
+        hasGameStarted = false;
+        currentRow = 11;
+        currentColumn = 0;
+        BLOCK_SIZE = INITIAL_BLOCK_SIZE;
+        direction = 1;
+        currentDelay = FLOOR_DELAYS[11];
+
+        for (int fila = 0; fila < FILAS; fila++) {
+            for (int col = 0; col < COLUMNAS; col++) {
+                gridCells[fila][col].setBackgroundColor(Color.LTGRAY);
+            }
+        }
+
+        Toast.makeText(this, "Juego reiniciado. Toca para comenzar", Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateStats() {
+        tvTriesCounter.setText(String.valueOf(tries));
+        tvSmallPriceCounter.setText(String.valueOf(smallPrizes));
+        tvBigPriceCounter.setText(String.valueOf(bigPrizes));
     }
 
     /**

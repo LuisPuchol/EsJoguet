@@ -2,6 +2,7 @@ package com.example.esjoguet;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -51,8 +52,8 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
     private final Map<Integer, Integer> tileColors = new HashMap<>();
     private Integer[][] board; // valores
     private TextView[][] tiles; // Referencias
-    private TextView tvScoreCounter, tvBestScoreCounter, tvMovesCounter, tvTimeCounter;
-    private Integer scoreCounter = 0, bestScoreCounter, movesCounter = 0, timeCounter = 0;
+    private TextView tvScoreCounter, tvBestScoreCounter, tvMovesCounter, tvTimeCounter, tvUsername;
+    private Integer scoreCounter = 0, movesCounter = 0, timeCounter = 0;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable runnable;
     private Random random = new Random();
@@ -67,12 +68,18 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: Activity has been created");
         super.onCreate(savedInstanceState);
+
         startStuff(savedInstanceState);
         gestureDetector = new GestureDetector(this, this);
 
         startGameLayout();
+
+        DBAssistant db = new DBAssistant(this);
+        tvBestScoreCounter.setText(String.valueOf(db.getUserBestScore(getUsername())));
+        tvUsername.setText(getUsername());
         initializeTileColors();
-        startGame();
+
+        restoreData(savedInstanceState);
 
         Button backButton = findViewById(R.id.BackBttn);
         backButton.setOnClickListener(v -> undoLastMove());
@@ -85,6 +92,53 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
                 startActivity(intent);
             }
         });
+
+        if (savedInstanceState != null) {
+            restoreData(savedInstanceState);
+        } else {
+            startGame();
+        }
+    }
+
+    private void restoreData(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            scoreCounter = savedInstanceState.getInt("scoreCounter", 0);
+            movesCounter = savedInstanceState.getInt("movesCounter", 0);
+            timeCounter = savedInstanceState.getInt("timeCounter", 0);
+            hasGameStarted = savedInstanceState.getBoolean("hasGameStarted", false);
+            previousScore = savedInstanceState.getInt("previousScore", 0);
+            previousMoves = savedInstanceState.getInt("previousMoves", 0);
+
+            //Matriz tablero
+            Integer[] flatBoard = (Integer[]) savedInstanceState.getSerializable("board");
+            if (flatBoard != null) {
+                for (int i = 0; i < GRID_SIZE; i++) {
+                    for (int j = 0; j < GRID_SIZE; j++) {
+                        board[i][j] = flatBoard[i * GRID_SIZE + j];
+                    }
+                }
+            }
+
+            //matriz tablero previo
+            Integer[] flatPreviousBoard = (Integer[]) savedInstanceState.getSerializable("previousBoard");
+            if (flatPreviousBoard != null) {
+                previousBoard = new Integer[GRID_SIZE][GRID_SIZE];
+                for (int i = 0; i < GRID_SIZE; i++) {
+                    for (int j = 0; j < GRID_SIZE; j++) {
+                        previousBoard[i][j] = flatPreviousBoard[i * GRID_SIZE + j];
+                    }
+                }
+            }
+
+            updateBoardUI();
+            tvScoreCounter.setText(String.valueOf(scoreCounter));
+            tvMovesCounter.setText(String.valueOf(movesCounter));
+            tvTimeCounter.setText(String.format("%02d:%02d", timeCounter / 60, timeCounter % 60));
+
+            if (hasGameStarted) {
+                startTimer();
+            }
+        }
     }
 
     private void startGame() {
@@ -106,7 +160,7 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
                 handler.postDelayed(this, 1000);
             }
         };
-        handler.post(runnable); // Start the timer
+        handler.post(runnable);
     }
 
     private void stopTimer() {
@@ -118,6 +172,7 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
         tvBestScoreCounter = findViewById(R.id.bestScoreCounter);
         tvMovesCounter = findViewById(R.id.movesCounter);
         tvTimeCounter = findViewById(R.id.timeCounter);
+        tvUsername = findViewById(R.id.userTextView);
 
         board = new Integer[GRID_SIZE][GRID_SIZE];
         tiles = new TextView[GRID_SIZE][GRID_SIZE];
@@ -281,7 +336,7 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
         }
 
         spawnRandomTile();
-        // Verificar si el juego ha terminado
+
         if (isGameOver()) {
             handleGameOver();
         }
@@ -320,23 +375,51 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
     private void handleGameOver() {
         Toast.makeText(this, "¡Game Over! No hay más movimientos.", Toast.LENGTH_LONG).show();
 
-        hasGameStarted = false;
-        stopTimer();
 
         DBAssistant dbAssistant = new DBAssistant(this);
-        String username = getUsername(); // Obtener el usuario actual
-        int userId = dbAssistant.getUserId(username); // Obtener el user_id desde la BBDD
-
-        if (userId == -1) {
-            Toast.makeText(this, "Error: Usuario no encontrado", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        String username = getUsername();
+        int userId = dbAssistant.getUserId(username);
 
         String time = tvTimeCounter.getText().toString();
-        int moves = Integer.parseInt(tvMovesCounter.getText().toString());
-        int score = Integer.parseInt(tvScoreCounter.getText().toString());
 
-        dbAssistant.insertGame2048Record(userId, moves, time, score);
+        dbAssistant.insertGame2048Record(userId, movesCounter, time, scoreCounter);
+
+        resetGame();
+    }
+
+    /**
+     * Restart the game
+     */
+    private void resetGame() {
+        //timer
+        stopTimer();
+
+        //counters
+        scoreCounter = 0;
+        movesCounter = 0;
+        timeCounter = 0;
+
+        //interface
+        tvScoreCounter.setText("0");
+        tvMovesCounter.setText("0");
+        tvTimeCounter.setText("00:00");
+
+        //board
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                board[i][j] = null;
+                updateTileUI(i, j, 0);
+            }
+        }
+
+        //stats
+        hasGameStarted = false;
+        previousBoard = null;
+        previousScore = 0;
+        previousMoves = 0;
+
+        //new game
+        startGame();
     }
 
     private String getUsername() {
@@ -475,6 +558,8 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        board = new Integer[GRID_SIZE][GRID_SIZE];
     }
 
     @Override
@@ -549,4 +634,37 @@ public class Activity_2048Game extends AppCompatActivity implements GestureDetec
         super.onDestroy();
         Log.d(TAG, "onDestroy: Activity is being destroyed");
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        //de matriz a array
+        Integer[] flatBoard = new Integer[GRID_SIZE * GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                flatBoard[i * GRID_SIZE + j] = board[i][j];
+            }
+        }
+        outState.putSerializable("board", flatBoard);
+
+        //de matriz a array previo
+        if (previousBoard != null) {
+            Integer[] flatPreviousBoard = new Integer[GRID_SIZE * GRID_SIZE];
+            for (int i = 0; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    flatPreviousBoard[i * GRID_SIZE + j] = previousBoard[i][j];
+                }
+            }
+            outState.putSerializable("previousBoard", flatPreviousBoard);
+        }
+
+        outState.putInt("scoreCounter", scoreCounter);
+        outState.putInt("movesCounter", movesCounter);
+        outState.putInt("timeCounter", timeCounter);
+        outState.putBoolean("hasGameStarted", hasGameStarted);
+        outState.putInt("previousScore", previousScore);
+        outState.putInt("previousMoves", previousMoves);
+    }
+
 }

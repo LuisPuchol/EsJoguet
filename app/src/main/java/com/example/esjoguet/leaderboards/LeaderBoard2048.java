@@ -16,6 +16,7 @@ import com.example.esjoguet.Activity_LeaderBoard;
 import com.example.esjoguet.DBAssistant;
 import com.example.esjoguet.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LeaderBoard2048 extends AppCompatActivity {
@@ -29,15 +30,14 @@ public class LeaderBoard2048 extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         startStuff(savedInstanceState);
 
-        recyclerLeaderboard2048 = findViewById(R.id.recyclerLeaderboard2048);
-        recyclerLeaderboard2048.setLayoutManager(new LinearLayoutManager(this));
+        // Inicializar componentes
+        initComponents();
 
-        dbAssistant = new DBAssistant(this);
-        leaderboardEntries = dbAssistant.get2048Leaderboard();
+        // Configurar RecyclerView
+        setupRecyclerView();
 
-        adapter = new LeaderBoardAdapter2048(leaderboardEntries);
-        recyclerLeaderboard2048.setAdapter(adapter);
-
+        // Cargar datos
+        loadLeaderboardData();
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -57,5 +57,29 @@ public class LeaderBoard2048 extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
+
+    private void initComponents() {
+        recyclerLeaderboard2048 = findViewById(R.id.recyclerLeaderboard2048);
+        leaderboardEntries = new ArrayList<>();
+        dbAssistant = new DBAssistant(this);
+    }
+
+    private void setupRecyclerView() {
+        adapter = new LeaderBoardAdapter2048(leaderboardEntries);
+        recyclerLeaderboard2048.setLayoutManager(new LinearLayoutManager(this));
+        recyclerLeaderboard2048.setAdapter(adapter);
+    }
+
+    private void loadLeaderboardData() {
+        // Obtener datos de la base de datos
+        List<LeaderBoardEntry2048> entries = dbAssistant.get2048Leaderboard();
+
+        // Limpiar lista actual y añadir nuevos datos
+        leaderboardEntries.clear();
+        leaderboardEntries.addAll(entries);
+
+        // Notificar al adaptador de los cambios
+        adapter.notifyDataSetChanged();
     }
 }

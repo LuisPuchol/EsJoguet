@@ -32,7 +32,8 @@
                 android:textColor="@color/black"
                 android:textSize="30sp"
                 tools:layout_editor_absoluteX="16dp"
-                tools:layout_editor_absoluteY="16dp" />
+                tools:layout_editor_absoluteY="16dp"
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/userTextView"
@@ -42,13 +43,9 @@
                 android:text="User"
                 android:textAlignment="center"
                 android:textColor="@color/black"
-                android:textSize="30sp" />
+                android:textSize="30sp"
+                android:textStyle="bold"/>
 
-            <ImageView
-                android:id="@+id/userImageView"
-                android:layout_width="39dp"
-                android:layout_height="40dp"
-                tools:srcCompat="@tools:sample/avatars" />
         </LinearLayout>
 
         <LinearLayout
@@ -81,7 +78,8 @@
                 android:textColor="@color/black"
                 android:textSize="30sp"
                 tools:layout_editor_absoluteX="16dp"
-                tools:layout_editor_absoluteY="16dp" />
+                tools:layout_editor_absoluteY="16dp"
+                android:textStyle="bold"/>
         </LinearLayout>
 
         <GridLayout
@@ -127,7 +125,8 @@
                 android:textColor="@color/black"
                 android:textSize="30sp"
                 tools:layout_editor_absoluteX="268dp"
-                tools:layout_editor_absoluteY="151dp" />
+                tools:layout_editor_absoluteY="151dp"
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/bigPriceCounter"
@@ -141,7 +140,8 @@
                 android:textColor="@color/black"
                 android:textSize="30sp"
                 tools:layout_editor_absoluteX="83dp"
-                tools:layout_editor_absoluteY="202dp" />
+                tools:layout_editor_absoluteY="202dp"
+                android:textStyle="bold"/>
         </GridLayout>
 
     </LinearLayout>

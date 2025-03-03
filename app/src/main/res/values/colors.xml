@@ -3,6 +3,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="lighter_gray">#FFEEEEEE</color>
+    <color name="darker_gray">#FFAAAAAA</color>
+    <color name="very_dark_gray">#4D4D4D</color>
+
 
 
     <color name="tile_2">#EEE4DA</color>

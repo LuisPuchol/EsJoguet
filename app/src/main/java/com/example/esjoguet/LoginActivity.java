@@ -71,19 +71,26 @@ public class LoginActivity extends AppCompatActivity implements GestureDetector.
 
         if (storedPassword == null) {
             dbAssistant.insertUser(username, password);
-            saveUsername(username); // Guardamos el usuario en SharedPreferences
+            saveUsername(username);
             showToast("Usuario creado con éxito");
             goToMainActivity();
         } else if (storedPassword.equals(password)) {
-            saveUsername(username); // Guardamos el usuario en SharedPreferences
+            saveUsername(username);
             showToast("Inicio de sesión exitoso");
             goToMainActivity();
         } else {
             showToast("Contraseña incorrecta");
         }
+
+        //dbAssistant.clear2048Table();
+        //dbAssistant.clearStackerTable();
+        //dbAssistant.resetDatabase();
+        //dbAssistant.populateDatabase();
     }
 
-    // Guardar el nombre de usuario en SharedPreferences
+    /**
+     * We save the user on shared preferences, to get the info on the leaderboard
+     */
     private void saveUsername(String username) {
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();

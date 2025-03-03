@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/app_general_background_less_detail"
     android:padding="16dp"
-    tools:context=".leaderboards.LeaderBoardStacker">
+    tools:context=".leaderboards.LeaderBoard2048">
 
     <TextView
         android:id="@+id/tvRecordsTitle"
@@ -15,7 +15,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:gravity="center"
-        android:text="Tabla de Récords"
+        android:text="Stacker Leaderboard"
+        android:textColor="@color/white"
         android:textSize="24sp"
         android:textStyle="bold" />
 
@@ -25,9 +26,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/tvRecordsTitle"
-        android:background="@android:color/darker_gray"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:background="@color/very_dark_gray"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="16dp">
 
         <TextView
             android:layout_width="0dp"
@@ -51,7 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Premios Pequeños"
+            android:text="Small Prizes"
             android:textColor="@android:color/white"
             android:textStyle="bold" />
 
@@ -60,16 +63,18 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Premios Grandes"
+            android:text="Big Prizes"
             android:textColor="@android:color/white"
             android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Lista de récords -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvRecords"
+        android:id="@+id/recyclerLeaderboard2048"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/tableHeader"
-        android:layout_marginTop="1dp" />
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginRight="16dp" />
 </RelativeLayout>

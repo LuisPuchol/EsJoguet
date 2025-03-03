@@ -25,7 +25,6 @@
     <EditText
         android:id="@+id/etUsername"
         style="@style/EditTextHint"
-        android:text="paco"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -34,17 +33,16 @@
         android:backgroundTint="#000000"
         android:hint="Usuario"
         android:inputType="text"
+        android:text="paco"
         android:textColor="@color/black"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/logoImage" />
 
-    <!-- Campo para la contraseña -->
     <EditText
         android:id="@+id/etPassword"
         style="@style/EditTextHint"
-        android:text="1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -53,38 +51,23 @@
         android:backgroundTint="#000000"
         android:hint="Contraseña"
         android:inputType="textPassword"
+        android:text="1"
         android:textColor="@color/black"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/etUsername" />
 
-    <!-- Botón de Login -->
     <Button
         android:id="@+id/btnLogin"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="80dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="8dp"
-        android:text="Login"
+        android:layout_width="210dp"
+        android:layout_height="47dp"
+        android:text="Login/Register"
         android:textSize="20sp"
-        app:layout_constraintEnd_toStartOf="@id/btnRegister"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etPassword" />
-
-    <!-- Botón de Register -->
-    <Button
-        android:id="@+id/btnRegister"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="80dp"
-        android:text="Register"
-        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnLogin"
-        app:layout_constraintTop_toBottomOf="@id/etPassword" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etPassword" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
